@@ -1,0 +1,7 @@
+#!/usr/bin/env node
+/**
+ * Wrapper script for acpx --agent usage.
+ * Usage: acpx --agent ./bin/claude-any-acp "your prompt"
+ */
+import { startAcpServer } from '../src/acp/server.js'
+startAcpServer()

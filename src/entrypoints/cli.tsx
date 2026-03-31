@@ -93,6 +93,13 @@ async function main(): Promise<void> {
     return;
   }
 
+  // Fast-path for `claude-any acp`: start ACP stdio server
+  if (args[0] === 'acp') {
+    const { startAcpServer } = await import('../acp/server.js');
+    await startAcpServer();
+    return;
+  }
+
   // Apply routing if --profile or --route flags are present, or if routing config exists.
   // This sets env vars BEFORE the main CLI loads providers.
   {
