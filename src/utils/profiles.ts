@@ -59,11 +59,85 @@ const PROFILES: Record<ProfileName, Record<string, string>> = {
 export const PROFILE_NAMES = Object.keys(PROFILES) as ProfileName[]
 
 /**
+ * Auto-detect OpenClaw's native LLM API keys and bridge them to claude-any config.
+ *
+ * OpenClaw sets standard env vars (OPENAI_API_KEY, ANTHROPIC_API_KEY, etc.)
+ * and OpenClaw-specific ones (OPENCLAW_LIVE_OPENAI_KEY, TOGETHER_API_KEY, etc.).
+ * This function detects them and auto-configures the provider.
+ *
+ * Priority:
+ *   1. Explicit CLAUDE_ANY_PROFILE (user chose a profile)
+ *   2. CLAUDE_CODE_USE_OPENAI already set (user configured manually)
+ *   3. Auto-detect from OpenClaw env vars
+ */
+function autoDetectOpenClawKeys(): void {
+  // Skip if user already configured explicitly
+  if (process.env.CLAUDE_ANY_PROFILE || process.env.CLAUDE_CODE_USE_OPENAI) return
+
+  // OpenClaw-specific "live" keys (highest priority for auto-detect)
+  if (process.env.OPENCLAW_LIVE_OPENAI_KEY && !process.env.OPENAI_API_KEY) {
+    process.env.OPENAI_API_KEY = process.env.OPENCLAW_LIVE_OPENAI_KEY
+  }
+  if (process.env.OPENCLAW_LIVE_ANTHROPIC_KEY && !process.env.ANTHROPIC_API_KEY) {
+    process.env.ANTHROPIC_API_KEY = process.env.OPENCLAW_LIVE_ANTHROPIC_KEY
+  }
+
+  // Auto-detect provider from available keys (if no Anthropic key and no explicit config)
+  if (!process.env.ANTHROPIC_API_KEY && !process.env.ANTHROPIC_AUTH_TOKEN) {
+    // Try providers in preference order
+    const autoProviders: Array<{
+      keyVar: string
+      altKeyVars?: string[]
+      profile: ProfileName
+      baseURL?: string
+    }> = [
+      { keyVar: 'OPENAI_API_KEY', profile: 'openai' },
+      { keyVar: 'OPENROUTER_API_KEY', profile: 'custom', baseURL: 'https://openrouter.ai/api/v1' },
+      { keyVar: 'TOGETHER_API_KEY', profile: 'together' },
+      { keyVar: 'DEEPSEEK_API_KEY', profile: 'custom', baseURL: 'https://api.deepseek.com/v1' },
+      { keyVar: 'MISTRAL_API_KEY', profile: 'custom', baseURL: 'https://api.mistral.ai/v1' },
+      { keyVar: 'XAI_API_KEY', profile: 'custom', baseURL: 'https://api.x.ai/v1' },
+    ]
+
+    for (const { keyVar, altKeyVars, profile, baseURL } of autoProviders) {
+      const key = process.env[keyVar] || altKeyVars?.map(v => process.env[v]).find(Boolean)
+      if (key) {
+        process.env.CLAUDE_CODE_USE_OPENAI = '1'
+        if (!process.env.OPENAI_API_KEY) process.env.OPENAI_API_KEY = key
+        if (baseURL && !process.env.OPENAI_BASE_URL) process.env.OPENAI_BASE_URL = baseURL
+        // Apply profile defaults for model etc.
+        const profileDefaults = PROFILES[profile]
+        if (profileDefaults) {
+          for (const [k, v] of Object.entries(profileDefaults)) {
+            if (process.env[k] === undefined) process.env[k] = v
+          }
+        }
+        return
+      }
+    }
+
+    // Check for Ollama (local, no key needed) — detect by OLLAMA_HOST or common port
+    if (process.env.OLLAMA_HOST || process.env.OLLAMA_API_KEY) {
+      process.env.CLAUDE_CODE_USE_OPENAI = '1'
+      process.env.OPENAI_API_KEY = process.env.OPENAI_API_KEY || ''
+      const host = process.env.OLLAMA_HOST || 'http://localhost:11434'
+      if (!process.env.OPENAI_BASE_URL) process.env.OPENAI_BASE_URL = `${host}/v1`
+      if (!process.env.OPENAI_MODEL) process.env.OPENAI_MODEL = 'llama3'
+      if (!process.env.OPENAI_MAX_TOKENS) process.env.OPENAI_MAX_TOKENS = '4096'
+      return
+    }
+  }
+}
+
+/**
  * Apply CLAUDE_ANY_PROFILE defaults to process.env.
  * Only sets env vars that are NOT already set, so explicit values always win.
  * Must be called very early in the boot sequence.
  */
 export function applyProfile(): void {
+  // First: auto-detect OpenClaw's native API keys
+  autoDetectOpenClawKeys()
+
   const profileName = process.env.CLAUDE_ANY_PROFILE?.toLowerCase()
   if (!profileName) return
 
@@ -148,6 +222,16 @@ export function getRedactedEnvDump(): string {
     'AWS_DEFAULT_REGION',
     'CLOUD_ML_REGION',
     'ANTHROPIC_VERTEX_PROJECT_ID',
+    // OpenClaw native keys (auto-detected)
+    'OPENCLAW_LIVE_OPENAI_KEY',
+    'OPENCLAW_LIVE_ANTHROPIC_KEY',
+    'OPENCLAW_STATE_DIR',
+    'OPENROUTER_API_KEY',
+    'TOGETHER_API_KEY',
+    'DEEPSEEK_API_KEY',
+    'MISTRAL_API_KEY',
+    'XAI_API_KEY',
+    'OLLAMA_HOST',
   ]
 
   const lines: string[] = []
