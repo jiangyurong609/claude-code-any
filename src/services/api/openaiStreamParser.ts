@@ -34,9 +34,15 @@ export interface OpenAIChatCompletionChunk {
 
 /**
  * Parse an SSE stream from an OpenAI-compatible API into chat completion chunks.
+ * Includes per-chunk idle timeout (borrowed from OpenCode's approach) to detect
+ * stalled streams that would otherwise hang indefinitely.
+ *
+ * @param body - ReadableStream from fetch response
+ * @param chunkTimeoutMs - Max ms to wait between chunks before aborting (default: 60s)
  */
 export async function* parseSSEStream(
   body: ReadableStream<Uint8Array>,
+  chunkTimeoutMs: number = parseInt(process.env.OPENAI_CHUNK_TIMEOUT_MS || '60000', 10),
 ): AsyncGenerator<OpenAIChatCompletionChunk> {
   const reader = body.getReader()
   const decoder = new TextDecoder()
@@ -44,7 +50,16 @@ export async function* parseSSEStream(
 
   try {
     while (true) {
-      const { done, value } = await reader.read()
+      // Per-chunk timeout: abort if no data arrives within the window
+      const readPromise = reader.read()
+      const timeoutPromise = chunkTimeoutMs > 0
+        ? new Promise<{ done: true; value: undefined }>((_, reject) =>
+            setTimeout(() => reject(new Error(`Stream stalled: no data received for ${chunkTimeoutMs}ms`)), chunkTimeoutMs),
+          )
+        : null
+      const { done, value } = await (timeoutPromise
+        ? Promise.race([readPromise, timeoutPromise])
+        : readPromise)
       if (done) break
 
       buffer += decoder.decode(value, { stream: true })
