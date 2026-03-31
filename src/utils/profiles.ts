@@ -152,7 +152,7 @@ function autoDetectOpenClawKeys(): void {
       process.env.OPENAI_API_KEY = process.env.OPENAI_API_KEY || ''
       const host = process.env.OLLAMA_HOST || 'http://localhost:11434'
       if (!process.env.OPENAI_BASE_URL) process.env.OPENAI_BASE_URL = `${host}/v1`
-      if (!process.env.OPENAI_MODEL) process.env.OPENAI_MODEL = 'llama3'
+      if (!process.env.OPENAI_MODEL) process.env.OPENAI_MODEL = 'qwen3.5'
       if (!process.env.OPENAI_MAX_TOKENS) process.env.OPENAI_MAX_TOKENS = '4096'
       return
     }
@@ -220,7 +220,7 @@ export function getResolvedConfig(): {
       ? (process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1')
       : (process.env.ANTHROPIC_BASE_URL || 'https://api.anthropic.com'),
     model: isOpenAI
-      ? (process.env.OPENAI_MODEL || process.env.ANTHROPIC_MODEL || 'gpt-4o')
+      ? (process.env.OPENAI_MODEL || process.env.ANTHROPIC_MODEL || 'gpt-5.4')
       : (process.env.ANTHROPIC_MODEL || '(default)'),
     apiKeyPresent: isOpenAI
       ? !!process.env.OPENAI_API_KEY

@@ -80,8 +80,8 @@ Best for: best model quality, production use.
 ```bash
 export CLAUDE_ANY_PROFILE=openai
 export OPENAI_API_KEY=sk-...
-# Default model: gpt-4.1. Override with:
-# export OPENAI_MODEL=gpt-4o
+# Default model: gpt-5.4. Override with:
+# export OPENAI_MODEL=gpt-5.4-pro
 ```
 
 Usage:

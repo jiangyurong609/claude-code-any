@@ -104,7 +104,7 @@ If you prefer explicit env vars over profiles:
 ```bash
 export CLAUDE_CODE_USE_OPENAI=1
 export OPENAI_API_KEY="sk-..."
-export OPENAI_MODEL="gpt-4.1"
+export OPENAI_MODEL="gpt-5.4"
 claude-any
 ```
 
@@ -113,7 +113,7 @@ claude-any
 ```bash
 export CLAUDE_CODE_USE_OPENAI=1
 export OPENAI_BASE_URL="http://localhost:11434/v1"
-export OPENAI_MODEL="llama3"
+export OPENAI_MODEL="qwen3.5"
 claude-any
 ```
 
@@ -156,12 +156,12 @@ claude-any --profile private --print "review sensitive code"
 claude-any --profile best --print "design the new architecture"
 ```
 
-| Profile | Plan/Code | Fix/Review/Search |
-|---|---|---|
-| `best` | gpt-4.1 | gpt-4.1 |
-| `cheap` | gpt-4.1-mini | gpt-4.1-mini |
-| `private` | qwen2.5-coder (local) | qwen2.5-coder (local) |
-| `balanced` | gpt-4.1 | gpt-4.1-mini |
+| Profile | Plan/Code | Fix/Review | Search/Summarize |
+|---|---|---|---|
+| `best` | gpt-5.4-pro | gpt-5.4 | gpt-5.4 |
+| `balanced` | gpt-5.4 | gpt-5.4-mini | gpt-5.4-nano |
+| `cheap` | gpt-5.4-mini | gpt-5.4-nano | gpt-5.4-nano |
+| `private` | qwen3.5 (local) | qwen3.5 (local) | qwen3.5 (local) |
 
 ### Task Classification
 
@@ -186,7 +186,7 @@ claude-any --route review --print "check this code"
 
 ```bash
 CLAUDE_ANY_DEBUG_ROUTING=1 claude-any --profile balanced --print "fix auth bug"
-# stderr: [routing] profile=balanced route=fix provider=openai-compatible model=gpt-4.1-mini
+# stderr: [routing] profile=balanced route=fix provider=openai-compatible model=gpt-5.4-mini
 ```
 
 ### Custom Routing Config
@@ -199,9 +199,9 @@ Create `~/.claude-any/config.json` or `.claude-any.json` in your project:
   "profiles": {
     "my-team": {
       "routes": {
-        "plan": { "provider": "openai", "model": "gpt-4.1" },
-        "code": { "provider": "openai", "model": "gpt-4.1" },
-        "fix": { "provider": "ollama", "model": "qwen2.5-coder", "baseURL": "http://localhost:11434/v1" }
+        "plan": { "provider": "openai", "model": "gpt-5.4" },
+        "code": { "provider": "openai", "model": "gpt-5.4" },
+        "fix": { "provider": "ollama", "model": "qwen3.5", "baseURL": "http://localhost:11434/v1" }
       }
     }
   }
@@ -292,7 +292,7 @@ Claude Code Any - Diagnostics
 | `CLAUDE_CODE_USE_OPENAI` | Yes | - | Set to `1` to enable |
 | `OPENAI_API_KEY` | No | `""` | API key (empty OK for local) |
 | `OPENAI_BASE_URL` | No | `https://api.openai.com/v1` | Base URL |
-| `OPENAI_MODEL` | No | `gpt-4o` | Model name |
+| `OPENAI_MODEL` | No | `gpt-5.4` | Model name |
 | `OPENAI_MAX_TOKENS` | No | `16384` | Max output tokens |
 
 ### Profiles & Routing

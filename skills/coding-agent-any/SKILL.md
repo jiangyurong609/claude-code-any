@@ -110,10 +110,10 @@ bash workdir:~/project command:"CLAUDE_ANY_PROFILE=groq claude-any --permission-
 Route different tasks to different models automatically:
 
 ```bash
-# Balanced: uses gpt-4.1 for planning/coding, gpt-4.1-mini for fixes/reviews
+# Balanced: uses gpt-5.4 for planning/coding, gpt-5.4-mini for fixes/reviews
 bash workdir:~/project command:"claude-any --profile balanced --permission-mode bypassPermissions --print 'Fix the null pointer in auth.ts'"
 
-# Cheap: all tasks use gpt-4.1-mini
+# Cheap: all tasks use gpt-5.4-mini/nano
 bash workdir:~/project command:"claude-any --profile cheap --permission-mode bypassPermissions --print 'Add docstrings to utils/'"
 
 # Private: all tasks use local Ollama

@@ -55,7 +55,7 @@ export function resolveRoute(options: {
   const isOpenAI = process.env.CLAUDE_CODE_USE_OPENAI === '1'
   return {
     provider: isOpenAI ? 'openai-compatible' : 'anthropic',
-    model: options.modelOverride || process.env.OPENAI_MODEL || process.env.ANTHROPIC_MODEL || 'gpt-4o',
+    model: options.modelOverride || process.env.OPENAI_MODEL || process.env.ANTHROPIC_MODEL || 'gpt-5.4',
     baseURL: process.env.OPENAI_BASE_URL,
     routeClass,
     profile,
