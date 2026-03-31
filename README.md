@@ -1,6 +1,8 @@
-# Claude Code (Multi-LLM Fork)
+# Claude Code Any
 
-A fork of [Claude Code](https://github.com/anthropics/claude-code) v2.1.88 with **OpenAI-compatible API support**. Use any LLM backend — OpenAI, Ollama, LM Studio, vLLM, Together AI, or any OpenAI-compatible server.
+A fork of [Claude Code](https://github.com/anthropics/claude-code) v2.1.88 with **multi-LLM support**, **provider profiles**, **smart task routing**, and **ACP protocol** for OpenClaw integration.
+
+Use any LLM backend — OpenAI, Ollama, LM Studio, vLLM, Together AI, Groq, or any OpenAI-compatible server — with the full Claude Code agent toolchain (file editing, bash, grep, glob, multi-file planning).
 
 ## Quick Start
 
@@ -13,273 +15,356 @@ A fork of [Claude Code](https://github.com/anthropics/claude-code) v2.1.88 with 
 ### Install & Build
 
 ```bash
-# Install dependencies
-pnpm install --registry https://registry.npmjs.org
+git clone https://github.com/jiangyurong609/claude-code-any.git
+cd claude-code-any
 
-# Build
+pnpm install --registry https://registry.npmjs.org
 bun run build.ts
 
-# Verify
-bun dist/cli.js --version
-# → 2.1.88 (Claude Code)
+# Install globally as `claude-any`
+npm link
 ```
 
-### Run
+### Verify
 
 ```bash
-# Interactive mode
-bun dist/cli.js
-
-# Non-interactive (print mode)
-bun dist/cli.js -p "your prompt here"
-
-# With Node.js instead of Bun
-node dist/cli.js
+claude-any --version          # 2.1.88 (Claude Code)
+claude-any doctor             # show diagnostics
 ```
 
 ---
 
-## LLM Configuration
+## Provider Profiles
 
-### Option 1: Anthropic API (Default)
+The fastest way to configure a backend. Set one env var and go:
 
 ```bash
-export ANTHROPIC_API_KEY="sk-ant-api03-..."
-bun dist/cli.js
+# OpenAI
+CLAUDE_ANY_PROFILE=openai OPENAI_API_KEY=sk-... claude-any
+
+# Ollama (local, free)
+CLAUDE_ANY_PROFILE=ollama claude-any
+
+# Groq (fast)
+CLAUDE_ANY_PROFILE=groq OPENAI_API_KEY=gsk_... claude-any
+
+# Together AI
+CLAUDE_ANY_PROFILE=together OPENAI_API_KEY=... claude-any
+
+# LM Studio
+CLAUDE_ANY_PROFILE=lmstudio claude-any
+
+# vLLM
+CLAUDE_ANY_PROFILE=vllm claude-any
+
+# Custom endpoint
+CLAUDE_ANY_PROFILE=custom OPENAI_BASE_URL=https://your-server/v1 OPENAI_MODEL=your-model claude-any
 ```
 
-Or log in with OAuth:
-```bash
-bun dist/cli.js auth login
-```
+Each profile sets sensible defaults. Explicit env vars always override profile defaults.
 
-### Option 2: OpenAI
+| Profile | Base URL | Default Model | API Key |
+|---|---|---|---|
+| `openai` | `api.openai.com` | `gpt-4.1` | Required |
+| `ollama` | `localhost:11434` | `llama3` | Not needed |
+| `lmstudio` | `localhost:1234` | `local-model` | Not needed |
+| `vllm` | `localhost:8000` | `default` | Not needed |
+| `together` | `api.together.xyz` | `Llama-3-70b` | Required |
+| `groq` | `api.groq.com` | `llama-3.3-70b` | Required |
+| `anthropic` | `api.anthropic.com` | Claude default | Required |
+
+---
+
+## Manual Configuration
+
+If you prefer explicit env vars over profiles:
+
+### OpenAI
 
 ```bash
 export CLAUDE_CODE_USE_OPENAI=1
 export OPENAI_API_KEY="sk-..."
-export OPENAI_MODEL="gpt-4.1"        # or gpt-4o, o4-mini, etc.
-bun dist/cli.js
+export OPENAI_MODEL="gpt-4.1"
+claude-any
 ```
 
-### Option 3: Ollama (Local, Free)
+### Ollama (Local, Free)
 
 ```bash
-# Start Ollama first: ollama serve
-# Pull a model: ollama pull llama3
-
 export CLAUDE_CODE_USE_OPENAI=1
 export OPENAI_BASE_URL="http://localhost:11434/v1"
 export OPENAI_MODEL="llama3"
-bun dist/cli.js
+claude-any
 ```
 
-### Option 4: LM Studio (Local)
+### Anthropic API (Default)
 
 ```bash
-# Start LM Studio server first
-
-export CLAUDE_CODE_USE_OPENAI=1
-export OPENAI_BASE_URL="http://localhost:1234/v1"
-export OPENAI_MODEL="your-loaded-model"
-bun dist/cli.js
+export ANTHROPIC_API_KEY="sk-ant-api03-..."
+claude-any
 ```
 
-### Option 5: Any OpenAI-Compatible Server
-
-Works with vLLM, Together AI, Groq, Fireworks, Azure OpenAI, etc.
+### AWS Bedrock / Google Vertex / Azure Foundry
 
 ```bash
-export CLAUDE_CODE_USE_OPENAI=1
-export OPENAI_BASE_URL="https://your-server/v1"
-export OPENAI_API_KEY="your-key"      # empty string OK for local servers
-export OPENAI_MODEL="your-model"
-bun dist/cli.js
-```
-
-### Option 6: AWS Bedrock
-
-```bash
+# Bedrock
 export CLAUDE_CODE_USE_BEDROCK=1
 export AWS_REGION="us-east-1"
-bun dist/cli.js
-```
 
-### Option 7: Google Vertex AI
-
-```bash
+# Vertex
 export CLAUDE_CODE_USE_VERTEX=1
 export CLOUD_ML_REGION="us-east5"
 export ANTHROPIC_VERTEX_PROJECT_ID="your-project"
-bun dist/cli.js
+
+# Foundry
+export CLAUDE_CODE_USE_FOUNDRY=1
+export ANTHROPIC_FOUNDRY_BASE_URL="https://your-resource.services.ai.azure.com"
 ```
 
 ---
 
-## Environment Variables Reference
+## Smart Task Routing
+
+Route different task types to different models/providers automatically.
+
+### Built-in Profiles
+
+```bash
+claude-any --profile balanced --print "fix the failing tests"
+claude-any --profile cheap --print "summarize this file"
+claude-any --profile private --print "review sensitive code"
+claude-any --profile best --print "design the new architecture"
+```
+
+| Profile | Plan/Code | Fix/Review/Search |
+|---|---|---|
+| `best` | gpt-4.1 | gpt-4.1 |
+| `cheap` | gpt-4.1-mini | gpt-4.1-mini |
+| `private` | qwen2.5-coder (local) | qwen2.5-coder (local) |
+| `balanced` | gpt-4.1 | gpt-4.1-mini |
+
+### Task Classification
+
+The router automatically detects task type from your prompt:
+
+| Keywords | Route |
+|---|---|
+| plan, design, approach | `plan` |
+| fix, bug, error, failing | `fix` |
+| review, PR, audit | `review` |
+| find, search, grep, where | `search` |
+| summarize, explain | `summarize` |
+| (default) | `code` |
+
+### Override Route
+
+```bash
+claude-any --route review --print "check this code"
+```
+
+### Debug Routing
+
+```bash
+CLAUDE_ANY_DEBUG_ROUTING=1 claude-any --profile balanced --print "fix auth bug"
+# stderr: [routing] profile=balanced route=fix provider=openai-compatible model=gpt-4.1-mini
+```
+
+### Custom Routing Config
+
+Create `~/.claude-any/config.json` or `.claude-any.json` in your project:
+
+```json
+{
+  "defaultProfile": "balanced",
+  "profiles": {
+    "my-team": {
+      "routes": {
+        "plan": { "provider": "openai", "model": "gpt-4.1" },
+        "code": { "provider": "openai", "model": "gpt-4.1" },
+        "fix": { "provider": "ollama", "model": "qwen2.5-coder", "baseURL": "http://localhost:11434/v1" }
+      }
+    }
+  }
+}
+```
+
+---
+
+## ACP Protocol (OpenClaw / acpx)
+
+`claude-code-any` speaks ACP (Agent Communication Protocol) for structured integration with [acpx](https://github.com/openclaw/acpx) and [OpenClaw](https://github.com/openclaw/openclaw).
+
+### Quick Start
+
+```bash
+# Direct ACP server
+claude-any acp --stdio
+
+# With acpx
+acpx --agent "claude-any acp --stdio" "Fix the failing tests"
+```
+
+### Protocol
+
+JSON-RPC 2.0 over stdin/stdout:
+
+```bash
+# Initialize
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize"}' | claude-any acp --stdio
+
+# Send prompt
+echo '{"jsonrpc":"2.0","id":2,"method":"prompt","params":{"prompt":"Fix auth","profile":"balanced"}}' | claude-any acp --stdio
+```
+
+Methods: `initialize`, `prompt`, `session.create`, `session.list`, `shutdown`
+
+See [docs/acp.md](docs/acp.md) for the full protocol spec.
+
+### OpenClaw Integration
+
+Replace `claude` with `claude-any` in OpenClaw's coding-agent config:
+
+```bash
+# Before
+claude --permission-mode bypassPermissions --print 'task'
+
+# After
+claude-any --permission-mode bypassPermissions --print 'task'
+```
+
+See [docs/openclaw.md](docs/openclaw.md) for detailed recipes.
+
+---
+
+## Diagnostics
+
+```bash
+# Check configuration and connectivity
+claude-any doctor
+
+# Dump environment (secrets redacted)
+claude-any env dump --redacted
+```
+
+Example output:
+
+```
+Claude Code Any - Diagnostics
+  Version:      2.1.88
+  Profile:      ollama
+  Provider:     openai-compatible
+  Base URL:     http://localhost:11434/v1
+  Model:        llama3
+  API Key:      (not set)
+  Max Tokens:   4096
+  Print mode:   available
+  Connectivity: OK
+```
+
+---
+
+## Environment Variables
 
 ### OpenAI-Compatible Mode
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `CLAUDE_CODE_USE_OPENAI` | Yes | - | Set to `1` to enable OpenAI mode |
-| `OPENAI_API_KEY` | No | `""` | API key (empty OK for local servers) |
-| `OPENAI_BASE_URL` | No | `https://api.openai.com/v1` | API base URL |
+| `CLAUDE_CODE_USE_OPENAI` | Yes | - | Set to `1` to enable |
+| `OPENAI_API_KEY` | No | `""` | API key (empty OK for local) |
+| `OPENAI_BASE_URL` | No | `https://api.openai.com/v1` | Base URL |
 | `OPENAI_MODEL` | No | `gpt-4o` | Model name |
-| `OPENAI_MAX_TOKENS` | No | `16384` | Max output tokens cap |
+| `OPENAI_MAX_TOKENS` | No | `16384` | Max output tokens |
 
-### Anthropic Mode (Default)
+### Profiles & Routing
+
+| Variable | Description |
+|---|---|
+| `CLAUDE_ANY_PROFILE` | Provider profile (openai, ollama, groq, etc.) |
+| `CLAUDE_ANY_ROUTING_PROFILE` | Routing profile (best, cheap, private, balanced) |
+| `CLAUDE_ANY_DEBUG_ROUTING` | Set to `1` for routing debug logs |
+| `CLAUDE_ANY_RUN_LOG_DIR` | Directory for run manifest JSON files |
+
+### Anthropic Mode
 
 | Variable | Description |
 |---|---|
 | `ANTHROPIC_API_KEY` | Anthropic API key |
-| `ANTHROPIC_MODEL` | Override model (e.g. `claude-sonnet-4-6`) |
+| `ANTHROPIC_MODEL` | Override model |
 | `ANTHROPIC_BASE_URL` | Custom API endpoint |
-| `API_TIMEOUT_MS` | Request timeout (default: 600000ms) |
 
 ---
 
-## Persistent Setup
+## Binary Aliases
 
-Add to your `~/.zshrc` (or `~/.bashrc`):
+After `npm link`, all of these work:
 
 ```bash
-# For OpenAI
-export CLAUDE_CODE_USE_OPENAI=1
-export OPENAI_API_KEY="sk-..."
-export OPENAI_MODEL="gpt-4.1"
-
-# For Ollama
-# export CLAUDE_CODE_USE_OPENAI=1
-# export OPENAI_BASE_URL="http://localhost:11434/v1"
-# export OPENAI_MODEL="llama3"
+claude-any --version
+claude-code-any --version
+cca --version
 ```
-
-Then create an alias:
-```bash
-alias ai="bun /path/to/claude-code-source/dist/cli.js"
-```
-
----
-
-## How It Works
-
-The OpenAI adapter (`src/services/api/openaiAdapter.ts`) implements the Anthropic SDK interface but translates requests/responses to OpenAI Chat Completions format:
-
-1. **Request translation**: Anthropic Messages API format → OpenAI Chat Completions format
-   - System prompt → system message
-   - Tool definitions → function definitions
-   - Tool results → tool role messages
-2. **Stream translation**: OpenAI SSE chunks → Anthropic `BetaRawMessageStreamEvent` events
-   - `delta.content` → `text_delta`
-   - `delta.tool_calls` → `tool_use` + `input_json_delta`
-   - `finish_reason` → `stop_reason`
-3. **Zero changes** to the core streaming loop (`claude.ts`) — the adapter is a drop-in client replacement
-
-### Anthropic-specific features disabled in OpenAI mode:
-- Extended thinking / adaptive thinking
-- Prompt caching
-- Context management
-- Effort levels
-- Beta headers
-- 1M context window
 
 ---
 
 ## Project Structure
 
 ```
-claude-code-source/
-├── src/                          # TypeScript source (1900+ files)
-│   ├── entrypoints/cli.tsx       # Build entry point
+claude-code-any/
+├── src/
+│   ├── entrypoints/cli.tsx          # CLI entry (profiles, doctor, routing, ACP)
 │   ├── services/api/
-│   │   ├── claude.ts             # Main API streaming loop (unchanged)
-│   │   ├── client.ts             # Client creation (modified: OpenAI branch)
-│   │   ├── openaiAdapter.ts      # NEW: OpenAI adapter
-│   │   └── openaiStreamParser.ts # NEW: SSE parser
-│   ├── utils/model/
-│   │   ├── providers.ts          # Modified: added 'openai' provider
-│   │   ├── configs.ts            # Modified: added openai model strings
-│   │   └── model.ts              # Modified: OpenAI model defaults
-│   └── ...
-├── stubs/                        # Stub packages for private deps
-├── patches/                      # Commander multi-char flag patch
-├── scripts/                      # Build/test/dev scripts
-├── docs/                         # Architecture & subsystem docs
-├── prompts/                      # Build guidance prompts
-├── web/                          # Web UI (Next.js)
-├── mcp-server/                   # Standalone MCP server
-├── docker/                       # Docker support
-├── dist/                         # Build output
-│   └── cli.js                    # Executable (22MB)
-├── build.ts                      # Bun build script
-├── package.json                  # Dependencies
-└── tsconfig.json                 # TypeScript config
+│   │   ├── claude.ts                # Core streaming loop (unchanged)
+│   │   ├── client.ts                # Client creation (+ OpenAI branch)
+│   │   ├── openaiAdapter.ts         # OpenAI ↔ Anthropic translation
+│   │   └── openaiStreamParser.ts    # SSE parser
+│   ├── utils/
+│   │   ├── profiles.ts              # Provider profiles (CLAUDE_ANY_PROFILE)
+│   │   ├── model/providers.ts       # Provider types (+ 'openai')
+│   │   └── routing/                 # Task routing system
+│   │       ├── classifier.ts        # Keyword-based task classification
+│   │       ├── config.ts            # Routing config loading
+│   │       ├── resolver.ts          # Route resolution + env application
+│   │       └── types.ts             # Routing types
+│   ├── acp/                         # ACP protocol server
+│   │   ├── server.ts                # JSON-RPC stdio server
+│   │   ├── sessionStore.ts          # Session persistence
+│   │   ├── eventMapper.ts           # Internal → ACP event mapping
+│   │   └── types.ts                 # ACP types
+│   └── ...                          # 1900+ original Claude Code source files
+├── tests/integration/               # Integration tests
+├── docs/
+│   ├── openclaw.md                  # OpenClaw integration guide
+│   ├── acp.md                       # ACP protocol spec
+│   └── ...                          # Architecture docs
+├── bin/claude-any-acp               # Wrapper for acpx --agent
+├── web/                             # Web UI (Next.js)
+├── mcp-server/                      # Standalone MCP server
+├── docker/                          # Docker support
+├── build.ts                         # Bun build script
+└── package.json                     # Dependencies + bin aliases
 ```
 
 ---
 
-## Additional Features
+## How the OpenAI Adapter Works
 
-### Web UI
-A Next.js web frontend is included in `web/`. See `web/README.md` for setup.
+The adapter (`src/services/api/openaiAdapter.ts`) implements the Anthropic SDK interface but translates to OpenAI Chat Completions format internally:
 
-### MCP Server
-A standalone MCP server is in `mcp-server/`. Can be deployed to Vercel or Railway.
+1. **Request**: Anthropic Messages API → OpenAI Chat Completions
+2. **Streaming**: OpenAI SSE → Anthropic `BetaRawMessageStreamEvent`
+3. **Tools**: Anthropic `tool_use`/`tool_result` ↔ OpenAI `function`/`tool_calls`
+4. **Zero changes** to the core streaming loop — drop-in client replacement
 
-### Docker
+Anthropic-specific features (thinking, caching, effort, betas, 1M context) are gracefully disabled in OpenAI mode.
+
+---
+
+## Docker
+
 ```bash
 docker build -t claude-code-any .
-docker run -e OPENAI_API_KEY=sk-... -e CLAUDE_CODE_USE_OPENAI=1 -e OPENAI_MODEL=gpt-4.1 -it claude-code-any
+docker run -e CLAUDE_ANY_PROFILE=openai -e OPENAI_API_KEY=sk-... -it claude-code-any
 ```
-
----
-
-## Building from Source
-
-### Source Recovery
-
-The source was extracted from `@anthropic-ai/claude-code@2.1.88` npm package's `cli.js.map`:
-
-```bash
-npm pack @anthropic-ai/claude-code@2.1.88 --registry https://registry.npmjs.org
-tar xzf anthropic-ai-claude-code-2.1.88.tgz
-
-node -e "
-const fs = require('fs'), path = require('path');
-const map = JSON.parse(fs.readFileSync('package/cli.js.map', 'utf8'));
-for (let i = 0; i < map.sources.length; i++) {
-  const content = map.sourcesContent[i];
-  if (!content) continue;
-  let relPath = map.sources[i];
-  while (relPath.startsWith('../')) relPath = relPath.slice(3);
-  const outPath = path.join('./claude-code-source', relPath);
-  fs.mkdirSync(path.dirname(outPath), { recursive: true });
-  fs.writeFileSync(outPath, content);
-}
-"
-```
-
-### Build Dependencies
-
-| Tool | Version | Purpose |
-|---|---|---|
-| [Bun](https://bun.sh) | v1.3.11+ | Bundler (uses `bun:bundle` feature flags) |
-| [pnpm](https://pnpm.io) | v10+ | Package manager |
-| Node.js | v18+ | Runtime |
-
-### Feature Flags
-
-The build uses 90+ compile-time feature flags for dead code elimination. See `build.ts` for the full list. Key flags:
-
-| Flag | Default | Description |
-|---|---|---|
-| `BUILTIN_EXPLORE_PLAN_AGENTS` | `true` | Built-in explore/plan agents |
-| `MCP_SKILLS` | `true` | MCP skill system |
-| `TOKEN_BUDGET` | `true` | Token budget display |
-| `BRIDGE_MODE` | `false` | IDE bridge (internal) |
-| `COORDINATOR_MODE` | `false` | Multi-agent coordinator |
-| `DAEMON` | `false` | Background daemon |
 
 ---
 
@@ -287,7 +372,7 @@ The build uses 90+ compile-time feature flags for dead code elimination. See `bu
 
 - Source extracted from [`@anthropic-ai/claude-code`](https://www.npmjs.com/package/@anthropic-ai/claude-code) v2.1.88
 - Build setup based on [Janlaywss/cloud-code](https://github.com/Janlaywss/cloud-code)
-- OpenAI-compatible adapter: original work in this fork
+- Multi-LLM adapter, routing, profiles, and ACP: original work in this fork
 
 ## License
 
