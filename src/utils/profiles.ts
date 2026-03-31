@@ -6,16 +6,24 @@
 export type ProfileName =
   | 'anthropic'
   | 'openai'
+  | 'azure'
   | 'ollama'
   | 'lmstudio'
   | 'vllm'
   | 'together'
   | 'groq'
   | 'deepseek'
+  | 'deepinfra'
   | 'kimi'
   | 'openrouter'
   | 'xai'
   | 'mistral'
+  | 'cohere'
+  | 'perplexity'
+  | 'cerebras'
+  | 'fireworks'
+  | 'github-copilot'
+  | 'sambanova'
   | 'custom'
 
 const PROFILES: Record<ProfileName, Record<string, string>> = {
@@ -80,6 +88,48 @@ const PROFILES: Record<ProfileName, Record<string, string>> = {
     CLAUDE_CODE_USE_OPENAI: '1',
     OPENAI_BASE_URL: 'https://api.mistral.ai/v1',
     OPENAI_MODEL: 'mistral-small-latest',
+  },
+  azure: {
+    CLAUDE_CODE_USE_OPENAI: '1',
+    // User must set OPENAI_BASE_URL to their Azure endpoint
+    // e.g. https://YOUR-RESOURCE.openai.azure.com/openai/deployments/YOUR-DEPLOYMENT/
+    OPENAI_MODEL: 'gpt-5.4',
+  },
+  cohere: {
+    CLAUDE_CODE_USE_OPENAI: '1',
+    OPENAI_BASE_URL: 'https://api.cohere.com/compatibility/v1',
+    OPENAI_MODEL: 'command-a-03-2025',
+  },
+  perplexity: {
+    CLAUDE_CODE_USE_OPENAI: '1',
+    OPENAI_BASE_URL: 'https://api.perplexity.ai',
+    OPENAI_MODEL: 'sonar-pro',
+  },
+  deepinfra: {
+    CLAUDE_CODE_USE_OPENAI: '1',
+    OPENAI_BASE_URL: 'https://api.deepinfra.com/v1/openai',
+    OPENAI_MODEL: 'Qwen/Qwen3.5-72B',
+  },
+  cerebras: {
+    CLAUDE_CODE_USE_OPENAI: '1',
+    OPENAI_BASE_URL: 'https://api.cerebras.ai/v1',
+    OPENAI_MODEL: 'llama-3.3-70b',
+    OPENAI_MAX_TOKENS: '8192',
+  },
+  fireworks: {
+    CLAUDE_CODE_USE_OPENAI: '1',
+    OPENAI_BASE_URL: 'https://api.fireworks.ai/inference/v1',
+    OPENAI_MODEL: 'accounts/fireworks/models/qwen3p5-72b',
+  },
+  'github-copilot': {
+    CLAUDE_CODE_USE_OPENAI: '1',
+    OPENAI_BASE_URL: 'https://api.githubcopilot.com',
+    OPENAI_MODEL: 'gpt-5.4',
+  },
+  sambanova: {
+    CLAUDE_CODE_USE_OPENAI: '1',
+    OPENAI_BASE_URL: 'https://api.sambanova.ai/v1',
+    OPENAI_MODEL: 'Meta-Llama-3.3-70B-Instruct',
   },
   custom: {
     CLAUDE_CODE_USE_OPENAI: '1',

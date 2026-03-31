@@ -59,49 +59,85 @@ let cachedConfig: RoutingConfig | null = null
 
 /**
  * Load routing config from file system, merged with built-in defaults.
- * Resolution order: project (.claude-any.json) > global (~/.claude-any/config.json) > built-in
+ *
+ * Resolution order (lowest → highest priority):
+ *   built-in defaults → global config → user config → project config
+ *
+ * Supports JSONC (JSON with comments) for all config files.
+ * Searches for: .claude-any.jsonc, .claude-any.json, claude-any.json
  */
 export function loadRoutingConfig(): RoutingConfig {
   if (cachedConfig) return cachedConfig
 
   const config = { ...DEFAULT_CONFIG, profiles: { ...DEFAULT_CONFIG.profiles } }
 
-  // Load global config
-  const globalPath = join(homedir(), '.claude-any', 'config.json')
-  const globalConfig = loadConfigFile(globalPath)
-  if (globalConfig) {
-    if (globalConfig.defaultProfile) config.defaultProfile = globalConfig.defaultProfile
-    if (globalConfig.profiles) {
-      for (const [name, profile] of Object.entries(globalConfig.profiles)) {
-        config.profiles[name] = profile
-      }
-    }
-  }
+  // Global config: ~/.claude-any/config.jsonc or config.json
+  const globalDir = join(homedir(), '.claude-any')
+  const globalConfig = loadConfigFromDir(globalDir, ['config.jsonc', 'config.json'])
+  if (globalConfig) mergeConfig(config, globalConfig)
 
-  // Load project config (overrides global)
-  const projectPath = join(process.cwd(), '.claude-any.json')
-  const projectConfig = loadConfigFile(projectPath)
-  if (projectConfig) {
-    if (projectConfig.defaultProfile) config.defaultProfile = projectConfig.defaultProfile
-    if (projectConfig.profiles) {
-      for (const [name, profile] of Object.entries(projectConfig.profiles)) {
-        config.profiles[name] = profile
-      }
-    }
-  }
+  // User config: ~/.config/claude-any/ (XDG standard)
+  const xdgDir = join(process.env.XDG_CONFIG_HOME || join(homedir(), '.config'), 'claude-any')
+  const xdgConfig = loadConfigFromDir(xdgDir, ['config.jsonc', 'config.json'])
+  if (xdgConfig) mergeConfig(config, xdgConfig)
+
+  // Project config: cwd/.claude-any.jsonc or .claude-any.json
+  const projectConfig = loadConfigFromDir(process.cwd(), [
+    '.claude-any.jsonc',
+    '.claude-any.json',
+    'claude-any.jsonc',
+    'claude-any.json',
+  ])
+  if (projectConfig) mergeConfig(config, projectConfig)
 
   cachedConfig = config
   return config
+}
+
+function mergeConfig(target: RoutingConfig, source: RoutingConfig): void {
+  if (source.defaultProfile) target.defaultProfile = source.defaultProfile
+  if (source.profiles) {
+    for (const [name, profile] of Object.entries(source.profiles)) {
+      // Deep merge: merge route-level, not replace entire profile
+      if (target.profiles[name]) {
+        target.profiles[name] = {
+          routes: { ...target.profiles[name].routes, ...profile.routes },
+        }
+      } else {
+        target.profiles[name] = profile
+      }
+    }
+  }
+}
+
+function loadConfigFromDir(dir: string, filenames: string[]): RoutingConfig | null {
+  for (const filename of filenames) {
+    const result = loadConfigFile(join(dir, filename))
+    if (result) return result
+  }
+  return null
 }
 
 function loadConfigFile(path: string): RoutingConfig | null {
   try {
     if (!existsSync(path)) return null
     const raw = readFileSync(path, 'utf-8')
-    return JSON.parse(raw)
+    return parseJSONC(raw)
   } catch {
     return null
   }
+}
+
+// Parse JSONC (JSON with Comments).
+// Strips line comments and block comments before parsing.
+function parseJSONC(text: string): any {
+  // Remove block comments
+  let stripped = text.replace(/\/\*[\s\S]*?\*\//g, '')
+  // Remove line comments (but not inside strings)
+  stripped = stripped.replace(/(?<!["\w])\/\/.*$/gm, '')
+  // Remove trailing commas before } or ]
+  stripped = stripped.replace(/,\s*([}\]])/g, '$1')
+  return JSON.parse(stripped)
 }
 
 /**

@@ -62,7 +62,7 @@ async function main(): Promise<void> {
     console.log(`  Max Tokens:   ${config.maxTokens}`);
     console.log(`  Print mode:   available`);
 
-    // Optional connectivity check
+    // Connectivity check
     if (args.includes('--check') || args.length === 1) {
       try {
         const baseUrl = config.baseUrl.replace(/\/+$/, '');
@@ -80,6 +80,33 @@ async function main(): Promise<void> {
         console.log(`  Connectivity: FAILED (${e.message || e})`);
       }
     }
+
+    // Model catalog check
+    try {
+      const { resolveModelInfo, forceRefresh } = await import('../utils/models/catalog.js');
+      const refreshResult = await forceRefresh();
+      if (refreshResult.ok) {
+        console.log(`  Model catalog: ${refreshResult.modelCount} models from models.dev`);
+        const resolved = await resolveModelInfo(config.model);
+        if (resolved.info) {
+          console.log(`  Model info:   ${resolved.info.name || resolved.info.id}`);
+          console.log(`    Tools:      ${resolved.info.tool_call ? 'yes' : 'no'}`);
+          console.log(`    Reasoning:  ${resolved.info.reasoning ? 'yes' : 'no'}`);
+          console.log(`    Context:    ${resolved.info.limit.context.toLocaleString()} tokens`);
+          console.log(`    Max output: ${(resolved.info.limit.output || 'unknown').toLocaleString()} tokens`);
+          if (resolved.info.cost) {
+            console.log(`    Cost:       $${resolved.info.cost.input}/$${resolved.info.cost.output} per 1M tokens`);
+          }
+        } else {
+          console.log(`  Model info:   not found in catalog`);
+        }
+      } else {
+        console.log(`  Model catalog: fetch failed (${refreshResult.error})`);
+      }
+    } catch {
+      console.log(`  Model catalog: unavailable`);
+    }
+
     return;
   }
 

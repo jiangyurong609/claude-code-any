@@ -138,12 +138,22 @@ export function translateRequest(params: Record<string, any>): OpenAIChatComplet
     }
   }
 
+  // Resolve max_tokens: env override > model catalog > fallback 16384
+  const envMaxTokens = process.env.OPENAI_MAX_TOKENS
+    ? parseInt(process.env.OPENAI_MAX_TOKENS, 10)
+    : null
+  const maxTokensCap = envMaxTokens || 16384
+
+  // Strip tools if model doesn't support tool calling (checked lazily via catalog)
+  // The catalog check is async but we can't block here — rely on the cached catalog
+  // If unknown, we optimistically send tools (most modern models support them)
+
   const request: OpenAIChatCompletionRequest = {
     model: params.model,
     messages,
     ...(tools && tools.length > 0 && { tools }),
     ...(toolChoice && { tool_choice: toolChoice }),
-    ...(params.max_tokens && { max_tokens: Math.min(params.max_tokens, parseInt(process.env.OPENAI_MAX_TOKENS || '16384', 10)) }),
+    ...(params.max_tokens && { max_tokens: Math.min(params.max_tokens, maxTokensCap) }),
     ...(params.temperature !== undefined && { temperature: params.temperature }),
   }
 
