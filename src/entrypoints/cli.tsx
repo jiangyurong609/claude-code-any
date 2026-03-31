@@ -93,6 +93,37 @@ async function main(): Promise<void> {
     return;
   }
 
+  // Apply routing if --profile or --route flags are present, or if routing config exists.
+  // This sets env vars BEFORE the main CLI loads providers.
+  {
+    const profileIdx = args.indexOf('--profile');
+    const routeIdx = args.indexOf('--route');
+    const profileArg = profileIdx !== -1 ? args[profileIdx + 1] : undefined;
+    const routeArg = routeIdx !== -1 ? args[routeIdx + 1] : undefined;
+
+    // Find the prompt (last positional arg after -p/--print, or the trailing arg)
+    const printIdx = Math.max(args.indexOf('-p'), args.indexOf('--print'));
+    const prompt = printIdx !== -1 && args[printIdx + 1] ? args[printIdx + 1] : '';
+
+    if (profileArg || routeArg || process.env.CLAUDE_ANY_ROUTING_PROFILE) {
+      const { resolveRoute, applyRoute, writeRunManifest } = await import('../utils/routing/resolver.js');
+      const target = resolveRoute({
+        prompt,
+        profileOverride: profileArg,
+        routeOverride: routeArg as any,
+      });
+      applyRoute(target);
+      writeRunManifest(target);
+
+      // Remove --profile and --route from args so commander doesn't choke
+      if (profileIdx !== -1) { args.splice(profileIdx, 2); }
+      const newRouteIdx = args.indexOf('--route');
+      if (newRouteIdx !== -1) { args.splice(newRouteIdx, 2); }
+      // Rebuild process.argv
+      process.argv = [process.argv[0], process.argv[1], ...args];
+    }
+  }
+
   // For all other paths, load the startup profiler
   const {
     profileCheckpoint
