@@ -1,5 +1,11 @@
 import { feature } from 'bun:bundle';
 
+// Apply CLAUDE_ANY_PROFILE defaults before anything else
+// eslint-disable-next-line custom-rules/no-top-level-side-effects
+import { applyProfile } from '../utils/profiles.js';
+// eslint-disable-next-line custom-rules/no-top-level-side-effects
+applyProfile();
+
 // Bugfix for corepack auto-pinning, which adds yarnpkg to peoples' package.jsons
 // eslint-disable-next-line custom-rules/no-top-level-side-effects
 process.env.COREPACK_ENABLE_AUTO_PIN = '0';
@@ -38,6 +44,52 @@ async function main(): Promise<void> {
     // MACRO.VERSION is inlined at build time
     // biome-ignore lint/suspicious/noConsole:: intentional console output
     console.log(`${MACRO.VERSION} (Claude Code)`);
+    return;
+  }
+
+  // Fast-path for `claude-any doctor`: lightweight diagnostics, no full CLI load
+  if (args[0] === 'doctor' && args.length <= 2) {
+    const { getResolvedConfig } = await import('../utils/profiles.js');
+    const config = getResolvedConfig();
+    // biome-ignore lint/suspicious/noConsole:: intentional console output
+    console.log(`Claude Code Any - Diagnostics`);
+    console.log(`  Version:      ${MACRO.VERSION}`);
+    console.log(`  Profile:      ${config.profile}`);
+    console.log(`  Provider:     ${config.provider}`);
+    console.log(`  Base URL:     ${config.baseUrl}`);
+    console.log(`  Model:        ${config.model}`);
+    console.log(`  API Key:      ${config.apiKeyPresent ? 'present' : '(not set)'}`);
+    console.log(`  Max Tokens:   ${config.maxTokens}`);
+    console.log(`  Print mode:   available`);
+
+    // Optional connectivity check
+    if (args.includes('--check') || args.length === 1) {
+      try {
+        const baseUrl = config.baseUrl.replace(/\/+$/, '');
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (config.provider === 'openai-compatible' && process.env.OPENAI_API_KEY) {
+          headers['Authorization'] = `Bearer ${process.env.OPENAI_API_KEY}`;
+        }
+        const resp = await fetch(`${baseUrl}/models`, {
+          method: 'GET',
+          headers,
+          signal: AbortSignal.timeout(5000),
+        });
+        console.log(`  Connectivity: ${resp.ok ? 'OK' : `HTTP ${resp.status}`}`);
+      } catch (e: any) {
+        console.log(`  Connectivity: FAILED (${e.message || e})`);
+      }
+    }
+    return;
+  }
+
+  // Fast-path for `claude-any env dump`: show env config
+  if (args[0] === 'env' && args[1] === 'dump') {
+    const { getRedactedEnvDump } = await import('../utils/profiles.js');
+    const redacted = args.includes('--redacted') || true; // always redact by default
+    // biome-ignore lint/suspicious/noConsole:: intentional console output
+    console.log(`Claude Code Any - Environment`);
+    console.log(redacted ? getRedactedEnvDump() : getRedactedEnvDump());
     return;
   }
 
