@@ -10,11 +10,11 @@ metadata:
         "install":
           [
             {
-              "id": "claude-code-any",
-              "kind": "custom",
-              "command": "git clone https://github.com/jiangyurong609/claude-code-any.git ~/.claude-any-src && cd ~/.claude-any-src && pnpm install && bun run build.ts && npm link",
+              "id": "node-claude-any",
+              "kind": "node",
+              "package": "claude-code-any",
               "bins": ["claude-any", "cca", "claude-code-any"],
-              "label": "Install claude-code-any (multi-LLM fork)",
+              "label": "Install claude-code-any via npm",
             },
           ],
       },
@@ -42,12 +42,20 @@ The default `coding-agent` skill requires Anthropic API access. This skill lets 
 
 ## Setup
 
-### 1. Install
+### 1. Install (one-liner)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/jiangyurong609/claude-code-any/main/install.sh | bash
+```
+
+This clones, builds, and links `claude-any` globally. It also copies the skill into your OpenClaw workspace.
+
+Or manually:
 
 ```bash
 git clone https://github.com/jiangyurong609/claude-code-any.git ~/.claude-any-src
-cd ~/.claude-any-src
-pnpm install && bun run build.ts && npm link
+cd ~/.claude-any-src && pnpm install && bun run build.ts && npm link
+cp -r skills/coding-agent-any ~/.openclaw/skills/
 ```
 
 ### 2. Configure Provider

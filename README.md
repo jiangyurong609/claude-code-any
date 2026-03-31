@@ -12,7 +12,13 @@ Use any LLM backend — OpenAI, Ollama, LM Studio, vLLM, Together AI, Groq, or a
 - [pnpm](https://pnpm.io) v10+
 - Node.js v18+
 
-### Install & Build
+### One-Liner Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/jiangyurong609/claude-code-any/main/install.sh | bash
+```
+
+### Manual Install
 
 ```bash
 git clone https://github.com/jiangyurong609/claude-code-any.git
