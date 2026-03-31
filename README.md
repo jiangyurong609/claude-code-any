@@ -26,6 +26,14 @@ CLAUDE_ANY_PROFILE=ollama   claude-any              # free, local
 | `groq` | Groq | `llama-3.3-70b` | Required |
 | `together` | Together AI | `Qwen3.5-72B` | Required |
 | `mistral` | Mistral AI | `mistral-small-latest` | Required |
+| `cohere` | Cohere | `command-a-03-2025` | Required |
+| `perplexity` | Perplexity | `sonar-pro` | Required |
+| `deepinfra` | DeepInfra | `Qwen3.5-72B` | Required |
+| `cerebras` | Cerebras | `llama-3.3-70b` | Required |
+| `fireworks` | Fireworks AI | `qwen3p5-72b` | Required |
+| `sambanova` | SambaNova | `Llama-3.3-70B` | Required |
+| `azure` | Azure OpenAI | `gpt-5.4` | Required |
+| `github-copilot` | GitHub Copilot | `gpt-5.4` | Required |
 | `ollama` | Ollama (local) | `qwen3.5` | Not needed |
 | `lmstudio` | LM Studio (local) | `local-model` | Not needed |
 | `vllm` | vLLM (self-hosted) | `default` | Not needed |
@@ -80,15 +88,24 @@ claude-any env dump --redacted # show all env vars (secrets masked)
 ```
 Claude Code Any - Diagnostics
   Version:      2.1.88
-  Profile:      ollama
+  Profile:      openai
   Provider:     openai-compatible
-  Base URL:     http://localhost:11434/v1
-  Model:        qwen3.5
-  API Key:      (not set)
-  Max Tokens:   4096
+  Base URL:     https://api.openai.com/v1
+  Model:        gpt-5.4
+  API Key:      present
+  Max Tokens:   16384
   Print mode:   available
   Connectivity: OK
+  Model catalog: 4108 models from models.dev
+  Model info:   GPT-5.4
+    Tools:      yes
+    Reasoning:  yes
+    Context:    1,050,000 tokens
+    Max output: 128,000 tokens
+    Cost:       $2.5/$15 per 1M tokens
 ```
+
+The doctor command auto-fetches model metadata from [models.dev](https://models.dev) (4,108 models) and shows capabilities, context window, pricing, and tool support for your selected model.
 
 ## OpenClaw Integration
 
@@ -143,9 +160,10 @@ After install: `claude-any`, `claude-code-any`, and `cca` all work.
 
 ## How It Works
 
-The OpenAI adapter translates between Anthropic's SDK interface and OpenAI Chat Completions format at the client boundary. Zero changes to Claude Code's core streaming loop — just a drop-in client replacement. Anthropic-specific features (thinking, caching, effort, betas) are gracefully disabled for non-Anthropic backends.
-
-See [docs/architecture.md](docs/architecture.md) for internals.
+- **OpenAI adapter** translates between Anthropic's SDK and OpenAI Chat Completions at the client boundary. Zero changes to Claude Code's core streaming loop — drop-in replacement.
+- **Model catalog** fetches 4,108 models from [models.dev](https://models.dev) with capabilities, pricing, and limits. Cached locally, refreshed hourly.
+- **JSONC config** supports comments and trailing commas. Multi-level merge: global (`~/.claude-any/`) → XDG (`~/.config/claude-any/`) → project (`.claude-any.jsonc`).
+- **Per-chunk SSE timeout** detects stalled streams (default 60s, configurable via `OPENAI_CHUNK_TIMEOUT_MS`).
 
 ## Credits
 
