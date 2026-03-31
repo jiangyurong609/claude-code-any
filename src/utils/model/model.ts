@@ -108,7 +108,7 @@ export function getDefaultOpusModel(): ModelName {
   }
   // OpenAI-compatible provider: use user-specified model
   if (getAPIProvider() === 'openai') {
-    return process.env.OPENAI_MODEL || process.env.ANTHROPIC_MODEL || 'gpt-4o'
+    return process.env.OPENAI_MODEL || process.env.ANTHROPIC_MODEL || 'gpt-5.4'
   }
   // 3P providers (Bedrock, Vertex, Foundry) — kept as a separate branch
   // even when values match, since 3P availability lags firstParty and
@@ -126,7 +126,7 @@ export function getDefaultSonnetModel(): ModelName {
   }
   // OpenAI-compatible provider: use user-specified model
   if (getAPIProvider() === 'openai') {
-    return process.env.OPENAI_MODEL || process.env.ANTHROPIC_MODEL || 'gpt-4o'
+    return process.env.OPENAI_MODEL || process.env.ANTHROPIC_MODEL || 'gpt-5.4'
   }
   // Default to Sonnet 4.5 for 3P since they may not have 4.6 yet
   if (getAPIProvider() !== 'firstParty') {
@@ -142,7 +142,7 @@ export function getDefaultHaikuModel(): ModelName {
   }
   // OpenAI-compatible provider: use user-specified model
   if (getAPIProvider() === 'openai') {
-    return process.env.OPENAI_MODEL || process.env.ANTHROPIC_MODEL || 'gpt-4o'
+    return process.env.OPENAI_MODEL || process.env.ANTHROPIC_MODEL || 'gpt-5.4'
   }
 
   // Haiku 4.5 is available on all platforms (first-party, Foundry, Bedrock, Vertex)

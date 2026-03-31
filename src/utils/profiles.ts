@@ -11,6 +11,11 @@ export type ProfileName =
   | 'vllm'
   | 'together'
   | 'groq'
+  | 'deepseek'
+  | 'kimi'
+  | 'openrouter'
+  | 'xai'
+  | 'mistral'
   | 'custom'
 
 const PROFILES: Record<ProfileName, Record<string, string>> = {
@@ -18,12 +23,12 @@ const PROFILES: Record<ProfileName, Record<string, string>> = {
   openai: {
     CLAUDE_CODE_USE_OPENAI: '1',
     OPENAI_BASE_URL: 'https://api.openai.com/v1',
-    OPENAI_MODEL: 'gpt-4.1',
+    OPENAI_MODEL: 'gpt-5.4',
   },
   ollama: {
     CLAUDE_CODE_USE_OPENAI: '1',
     OPENAI_BASE_URL: 'http://localhost:11434/v1',
-    OPENAI_MODEL: 'llama3',
+    OPENAI_MODEL: 'qwen3.5',
     OPENAI_API_KEY: '',
     OPENAI_MAX_TOKENS: '4096',
   },
@@ -43,13 +48,38 @@ const PROFILES: Record<ProfileName, Record<string, string>> = {
   together: {
     CLAUDE_CODE_USE_OPENAI: '1',
     OPENAI_BASE_URL: 'https://api.together.xyz/v1',
-    OPENAI_MODEL: 'meta-llama/Llama-3-70b-chat-hf',
+    OPENAI_MODEL: 'Qwen/Qwen3.5-72B',
   },
   groq: {
     CLAUDE_CODE_USE_OPENAI: '1',
     OPENAI_BASE_URL: 'https://api.groq.com/openai/v1',
     OPENAI_MODEL: 'llama-3.3-70b-versatile',
     OPENAI_MAX_TOKENS: '8192',
+  },
+  deepseek: {
+    CLAUDE_CODE_USE_OPENAI: '1',
+    OPENAI_BASE_URL: 'https://api.deepseek.com/v1',
+    OPENAI_MODEL: 'deepseek-chat',
+  },
+  kimi: {
+    CLAUDE_CODE_USE_OPENAI: '1',
+    OPENAI_BASE_URL: 'https://api.moonshot.cn/v1',
+    OPENAI_MODEL: 'kimi-k2.5',
+  },
+  openrouter: {
+    CLAUDE_CODE_USE_OPENAI: '1',
+    OPENAI_BASE_URL: 'https://openrouter.ai/api/v1',
+    OPENAI_MODEL: 'openai/gpt-5.4',
+  },
+  xai: {
+    CLAUDE_CODE_USE_OPENAI: '1',
+    OPENAI_BASE_URL: 'https://api.x.ai/v1',
+    OPENAI_MODEL: 'grok-4.20-beta',
+  },
+  mistral: {
+    CLAUDE_CODE_USE_OPENAI: '1',
+    OPENAI_BASE_URL: 'https://api.mistral.ai/v1',
+    OPENAI_MODEL: 'mistral-small-latest',
   },
   custom: {
     CLAUDE_CODE_USE_OPENAI: '1',

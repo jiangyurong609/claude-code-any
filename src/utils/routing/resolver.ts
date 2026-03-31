@@ -43,7 +43,7 @@ export function resolveRoute(options: {
         route.provider === 'openai' ? 'openai-compatible' :
         route.provider === 'anthropic' ? 'anthropic' : 'openai-compatible'
       ),
-      model: options.modelOverride || process.env.OPENAI_MODEL || route.model,
+      model: options.modelOverride || route.model,
       baseURL: route.baseURL || process.env.OPENAI_BASE_URL,
       apiKeyEnv: route.apiKeyEnv,
       routeClass,

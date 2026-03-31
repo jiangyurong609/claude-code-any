@@ -48,19 +48,28 @@ The fastest way to configure a backend. Set one env var and go:
 # OpenAI
 CLAUDE_ANY_PROFILE=openai OPENAI_API_KEY=sk-... claude-any
 
+# DeepSeek
+CLAUDE_ANY_PROFILE=deepseek OPENAI_API_KEY=sk-... claude-any
+
+# Kimi K2.5
+CLAUDE_ANY_PROFILE=kimi OPENAI_API_KEY=sk-... claude-any
+
 # Ollama (local, free)
 CLAUDE_ANY_PROFILE=ollama claude-any
 
 # Groq (fast)
 CLAUDE_ANY_PROFILE=groq OPENAI_API_KEY=gsk_... claude-any
 
-# Together AI
+# xAI Grok
+CLAUDE_ANY_PROFILE=xai OPENAI_API_KEY=xai-... claude-any
+
+# OpenRouter (access any model)
+CLAUDE_ANY_PROFILE=openrouter OPENAI_API_KEY=sk-or-... claude-any
+
+# Together AI / Mistral / LM Studio / vLLM
 CLAUDE_ANY_PROFILE=together OPENAI_API_KEY=... claude-any
-
-# LM Studio
+CLAUDE_ANY_PROFILE=mistral OPENAI_API_KEY=... claude-any
 CLAUDE_ANY_PROFILE=lmstudio claude-any
-
-# vLLM
 CLAUDE_ANY_PROFILE=vllm claude-any
 
 # Custom endpoint
@@ -71,12 +80,17 @@ Each profile sets sensible defaults. Explicit env vars always override profile d
 
 | Profile | Base URL | Default Model | API Key |
 |---|---|---|---|
-| `openai` | `api.openai.com` | `gpt-4.1` | Required |
-| `ollama` | `localhost:11434` | `llama3` | Not needed |
+| `openai` | `api.openai.com` | `gpt-5.4` | Required |
+| `deepseek` | `api.deepseek.com` | `deepseek-chat` | Required |
+| `kimi` | `api.moonshot.cn` | `kimi-k2.5` | Required |
+| `xai` | `api.x.ai` | `grok-4.20-beta` | Required |
+| `openrouter` | `openrouter.ai` | `openai/gpt-5.4` | Required |
+| `ollama` | `localhost:11434` | `qwen3.5` | Not needed |
 | `lmstudio` | `localhost:1234` | `local-model` | Not needed |
 | `vllm` | `localhost:8000` | `default` | Not needed |
-| `together` | `api.together.xyz` | `Llama-3-70b` | Required |
+| `together` | `api.together.xyz` | `Qwen3.5-72B` | Required |
 | `groq` | `api.groq.com` | `llama-3.3-70b` | Required |
+| `mistral` | `api.mistral.ai` | `mistral-small-latest` | Required |
 | `anthropic` | `api.anthropic.com` | Claude default | Required |
 
 ---
