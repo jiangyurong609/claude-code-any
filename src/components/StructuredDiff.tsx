@@ -48,6 +48,8 @@ function computeGutterWidth(patch: StructuredPatchHunk): number {
   return maxLineNumber.toString().length + 3; // marker + 2 padding spaces
 }
 function renderColorDiff(patch: StructuredPatchHunk, firstLine: string | null, filePath: string, fileContent: string | null, theme: string, width: number, dim: boolean, splitGutter: boolean): CachedRender | null {
+  // Defensive: skip if patch.lines is empty or undefined
+  if (!patch?.lines || patch.lines.length === 0) return null;
   const ColorDiff = expectColorDiff();
   if (!ColorDiff) return null;
 

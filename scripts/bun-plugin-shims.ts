@@ -14,5 +14,11 @@ plugin({
     build.onResolve({ filter: /^bun:bundle$/ }, () => ({
       path: shimPath,
     }))
+
+    // Intercept color-diff-napi and redirect to native-ts implementation
+    const colorDiffPath = resolve(import.meta.dir, '../src/native-ts/color-diff/index.ts')
+    build.onResolve({ filter: /^color-diff-napi$/ }, () => ({
+      path: colorDiffPath,
+    }))
   },
 })
