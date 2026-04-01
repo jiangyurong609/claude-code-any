@@ -168,7 +168,6 @@ After install: `claude-any`, `claude-code-any`, and `cca` all work.
 ## Credits
 
 - Source: [`@anthropic-ai/claude-code`](https://www.npmjs.com/package/@anthropic-ai/claude-code) v2.1.88
-- Build setup: [Janlaywss/cloud-code](https://github.com/Janlaywss/cloud-code)
 - Multi-LLM adapter, routing, profiles, ACP: original work in this fork
 
 ## License
