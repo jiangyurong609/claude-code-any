@@ -234,6 +234,32 @@ export function applyProfile(): void {
       process.env[key] = value
     }
   }
+
+  // Bridge provider-specific API keys to OPENAI_API_KEY when using profiles.
+  // This lets users set their native key (e.g. DEEPSEEK_API_KEY) instead of OPENAI_API_KEY.
+  if (!process.env.OPENAI_API_KEY) {
+    const keyBridges: Record<string, string> = {
+      deepseek: 'DEEPSEEK_API_KEY',
+      kimi: 'KIMI_API_KEY',
+      xai: 'XAI_API_KEY',
+      mistral: 'MISTRAL_API_KEY',
+      together: 'TOGETHER_API_KEY',
+      openrouter: 'OPENROUTER_API_KEY',
+      groq: 'GROQ_API_KEY',
+      cohere: 'COHERE_API_KEY',
+      perplexity: 'PERPLEXITY_API_KEY',
+      deepinfra: 'DEEPINFRA_API_KEY',
+      cerebras: 'CEREBRAS_API_KEY',
+      fireworks: 'FIREWORKS_API_KEY',
+      sambanova: 'SAMBANOVA_API_KEY',
+      azure: 'AZURE_OPENAI_API_KEY',
+      'github-copilot': 'GITHUB_TOKEN',
+    }
+    const bridgeVar = keyBridges[profileName]
+    if (bridgeVar && process.env[bridgeVar]) {
+      process.env.OPENAI_API_KEY = process.env[bridgeVar]
+    }
+  }
 }
 
 /**

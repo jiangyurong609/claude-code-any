@@ -8,10 +8,10 @@ One CLI. Any backend. Full agent toolchain — file editing, bash, grep, glob, m
 # Install
 curl -fsSL https://raw.githubusercontent.com/jiangyurong609/claude-code-any/main/install.sh | bash
 
-# Run with any provider
-CLAUDE_ANY_PROFILE=openai   OPENAI_API_KEY=sk-... claude-any
-CLAUDE_ANY_PROFILE=deepseek OPENAI_API_KEY=sk-... claude-any
-CLAUDE_ANY_PROFILE=ollama   claude-any              # free, local
+# Run with any provider (use that provider's own API key)
+CLAUDE_ANY_PROFILE=openai   OPENAI_API_KEY=sk-...     claude-any
+CLAUDE_ANY_PROFILE=deepseek DEEPSEEK_API_KEY=sk-...   claude-any
+CLAUDE_ANY_PROFILE=ollama   claude-any                 # free, local
 ```
 
 ## Supported Providers
