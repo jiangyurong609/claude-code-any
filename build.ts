@@ -125,6 +125,14 @@ const result = await Bun.build({
   ],
   plugins: [
     {
+      name: 'color-diff-redirect',
+      setup(build) {
+        build.onResolve({ filter: /^color-diff-napi$/ }, () => ({
+          path: import.meta.dir + '/src/native-ts/color-diff/index.ts',
+        }))
+      },
+    },
+    {
       name: 'bun-bundle-feature-shim',
       setup(build) {
         // Intercept bun:bundle imports and replace feature() with compile-time values
